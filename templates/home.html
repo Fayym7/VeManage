@@ -1,0 +1,915 @@
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .block {
+            background-color: #f2f2f2;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .block h2 {
+            margin-top: 0;
+        }
+
+        .block button {
+            margin-right: 10px;
+        }
+
+        .form-section {
+            display: none;
+            padding-top: 10px;
+        }
+
+        .form-section.show {
+            display: block;
+        }
+    </style>
+</head> {% endcomment %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 20px;
+        }
+
+        .block {
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .block h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333333;
+        }
+
+        .block button {
+            margin-right: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .block button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-section {
+            display: none;
+            padding-top: 10px;
+        }
+
+        .form-section.show {
+            display: block;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333333;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="datetime-local"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dddddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #333333;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background-color: #28a745;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position-x: calc(100% - 10px);
+            background-position-y: center;
+            padding-right: 30px;
+        }
+
+        select::-ms-expand {
+            display: none;
+        }
+
+        select option {
+            color: #333333;
+        }
+
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #dddddd;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            color: #333333;
+        }
+
+        .response h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 20px;
+            color: #333333;
+        }
+
+        .response p {
+            margin: 0;
+            font-size: 16px;
+            color: #333333;
+        }
+
+        .error-message {
+            color: #dc3545;
+        }
+    </style>
+<body>
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+    </form>
+    <div class="container">
+        <div class="block" id="vendorProfileBlock">
+            <h2>Vendor Profile Management</h2>
+            <button onclick="toggleForm('createVendorForm')">Create Vendor</button>
+            <button onclick="toggleForm('retrieveVendorForm')">Retrieve Vendor</button>
+            <button onclick="toggleForm('updateVendorForm')">Update Vendor</button>
+            <button onclick="toggleForm('deleteVendorForm')">Delete Vendor</button>
+            <button onclick="listAllVendors()">List All Vendors</button>
+            <div id="vendorProfileResponse" class="form-section"></div>
+
+            <div id="createVendorForm" class="form-section">
+                <h3>Create New Vendor</h3>
+                <form id="createVendorForm">
+                    <label for="vendorName">Name:</label>
+                    <input type="text" id="vendorName" name="vendorName" required><br><br>
+                    <label for="contactDetails">Contact Details:</label>
+                    <input type="text" id="contactDetails" name="contactDetails" required><br><br>
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address" required><br><br>
+                    <label for="vendorCode">Vendor Code(unique):</label>
+                    <input type="text" id="vendorCode" name="vendorCode" required><br><br>
+                    <button type="submit">Create Vendor</button>
+                </form>
+            </div>
+            
+            <div id="retrieveVendorForm" class="form-section">
+                <h3>Retrieve Vendor Details</h3>
+                <form id="retrieveVendorForm">
+                    <label for="vendorId">Vendor Code:</label>
+                    <input type="text" id="vendorId" name="vendorId" required><br><br>
+                    <button type="submit">Retrieve Vendor Details</button>
+                </form>
+            </div>
+            
+            <div id="updateVendorForm" class="form-section">
+                <h3>Update Vendor Details</h3>
+                <form id="updateVendorForm">
+                    <label for="UvendorCode">Vendor Code:</label>
+                    <input type="text" id="UvendorCode" name="UvendorCode" required><br><br>
+                    <label for="UvendorName">Name:</label>
+                    <input type="text" id="UvendorName" name="UvendorName" ><br><br>
+                    <label for="UcontactDetails">Contact Details:</label>
+                    <input type="text" id="UcontactDetails" name="UcontactDetails" ><br><br>
+                    <label for="Uaddress">Address:</label>
+                    <input type="text" id="Uaddress" name="Uaddress" ><br><br>
+                    <button type="submit">Update Vendor</button>
+                </form>
+            </div>
+            
+            <div id="deleteVendorForm" class="form-section">
+                <h3>Delete Vendor</h3>
+                <form id="deleteVendorForm">
+                    <label for="deleteVendorId">Vendor Code:</label>
+                    <input type="text" id="deleteVendorId" name="deleteVendorId" required><br><br>
+                    <button type="submit">Delete Vendor</button>
+                </form>
+            </div>
+            
+            
+        </div>
+        <div class="block" id="purchaseOrderBlock">
+            <h2>Purchase Order Tracking</h2>
+            <button onclick="toggleForm('createPurchaseOrderForm')">Create Purchase Order</button>
+            <button onclick="toggleForm('retrievePurchaseOrderForm')">Retrieve Purchase Order</button>
+            <button onclick="toggleForm('updatePurchaseOrderForm')">Update Purchase Order</button>
+            <button onclick="toggleForm('deletePurchaseOrderForm')">Delete Purchase Order</button>
+            <button onclick="listAllPurchaseOrders()">List All Purchase Orders</button> 
+            <button onclick="toggleForm('AcknowledgePurchaseOrderForm')">Acknowledge Purchase Order</button>
+            <div id="purchaseOrderResponse" class="form-section"></div>
+            <div id="purchaseOrderListResponse" class="form-section">
+                <select id="vendorSelect">
+                    <option value="">Select Vendor</option>
+                </select> 
+                <div id="purchaseOrderList" class="form-section">     
+                </div>         
+            </div>
+
+            <div id="createPurchaseOrderForm" class="form-section">
+                <h3>Create New Purchase Order</h3>
+                <form id="createPurchaseOrderForm">
+                    <label for="poNumber">PO Number:</label>
+                    <input type="text" id="poNumber" name="poNumber" required><br><br>
+                    <label for="vendor">Vendor:</label>
+                    <input type="text" id="vendor" name="vendor" required><br><br>                      
+                    <label for="deliveryDate">Delivery Date:</label>
+                    <input type="date" id="deliveryDate" name="deliveryDate" required><br><br>  
+                    <label for="issueDate">Issue Date:</label>
+                    <input type="datetime-local" id="issueDate" name="issueDate" required><br><br>   
+                    <label for="items">Items:</label>
+                    <textarea id="items" name="items" rows="4" required></textarea><br><br>
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" required><br><br>
+                    <button type="submit">Create Purchase Order</button>
+                </form>
+            </div>
+            
+            <div id="retrievePurchaseOrderForm" class="form-section">
+                <h3>Retrieve Purchase Order Details</h3>
+                <form id="retrievePurchaseOrderForm">
+                    <label for="purchaseOrderId">Purchase Order ID:</label>
+                    <input type="text" id="purchaseOrderId" name="purchaseOrderId" required><br><br>
+                    <button type="submit">Retrieve Purchase Order Details</button>
+                </form>
+            </div>
+
+            <div id="AcknowledgePurchaseOrderForm" class="form-section">
+                <h3>Acknowledge Purchase Order </h3>
+                <form id="acknowledgePurchaseOrderForm">
+                    <label for="ApurchaseOrderId">Purchase Order ID:</label>
+                    <input type="text" id="ApurchaseOrderId" name="ApurchaseOrderId" required><br><br>
+                    <button type="submit">Acknowledge Purchase Order Details</button>
+                </form>
+            </div>
+            
+            <div id="updatePurchaseOrderForm" class="form-section">
+                <h3>Update Purchase Order Details</h3>
+                <form id="updatePurchaseOrderForm">
+                    <label for="updatePurchaseOrderId">Purchase Order ID:</label>
+                    <input type="text" id="updatePurchaseOrderId" name="updatePurchaseOrderId" required><br><br>
+                    <label for="UPvendor">Vendor:</label>
+                    <input type="text" id="UPvendor" name="UPvendor"><br><br>                      
+                    <label for="UPdeliveryDate">Delivery Date:</label>
+                    <input type="date" id="UPdeliveryDate" name="UPdeliveryDate" ><br><br>  
+                    <label for="UPissueDate">Issue Date:</label>
+                    <input type="datetime-local" id="UPissueDate" name="UPissueDate" ><br><br>   
+                    <label for="UPitems">Items:</label>
+                    <textarea id="UPitems" name="UPitems" rows="4" ></textarea><br><br>
+                    <label for="UPquantity">Quantity:</label>
+                    <input type="number" id="UPquantity" name="UPquantity" ><br><br>
+                    <label for="UPstatus">Status:</label>
+                    <select id="UPstatus" name="UPstatus">
+                        <option value="pending" selected>Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="canceled">Canceled</option>
+                    </select>
+                    <button type="submit">Update Purchase Order</button>
+                </form>
+            </div>
+            
+            <div id="deletePurchaseOrderForm" class="form-section">
+                <h3>Delete Purchase Order</h3>
+                <form id="deletePurchaseOrderForm">
+                    <label for="deletePurchaseOrderId">Purchase Order ID:</label>
+                    <input type="text" id="deletePurchaseOrderId" name="deletePurchaseOrderId" required><br><br>
+                    <button type="submit">Delete Purchase Order</button>
+                </form>
+            </div>
+            
+        </div>
+        <div class="block" id="vendorPerformanceBlock">
+            <h2>Vendor Performance Evaluation</h2>
+            <button onclick="toggleForm('vendorPerformanceForm')">Get Vendor Performance</button>
+            <form id="vendorPerformanceForm" class="form-section">
+                <label for="vendorPerformanceId">Vendor ID:</label>
+                <input type="text" id="vendorPerformanceId" name="vendorPerformanceId" required><br><br>
+                <button type="submit">Retrieve Performance Metrics</button>
+            </form>
+            <div id="performanceResponse"></div>
+        </div>
+        
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        function toggleForm(formId) {
+            var formSection = document.getElementById(formId);
+            var allFormSections = document.querySelectorAll('.form-section');
+            allFormSections.forEach(function(section) {
+                if (section.id == formId) {
+                    section.classList.toggle('show');
+                } else {
+                    section.classList.remove('show');
+                }
+            });
+        }
+        
+
+        document.getElementById('createVendorForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            createVendor(); // Call the createVendor function
+        });
+        
+        document.getElementById('createPurchaseOrderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            createPurchaseOrder(); // Call the createPurchaseOrder function
+        });
+        
+        document.getElementById('retrieveVendorForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            retrieveVendorDetails(); // Call the retrieveVendorDetails function
+        });
+        
+        document.getElementById('retrievePurchaseOrderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            retrievePurchaseOrderDetails(); // Call the retrievePurchaseOrderDetails function
+        });
+
+        document.getElementById('acknowledgePurchaseOrderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            acknowledgePurchaseOrder(); // Call the retrievePurchaseOrderDetails function
+        });
+        
+        document.getElementById('vendorPerformanceForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            getVendorPerformance(); // Call the getVendorPerformance function
+        });
+
+        document.getElementById('updateVendorForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            updateVendor(); // Call the updateVendor function
+        });
+        
+        document.getElementById('deleteVendorForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            deleteVendor(); // Call the deleteVendor function
+        });
+        
+        document.getElementById('updatePurchaseOrderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            updatePurchaseOrder(); // Call the updatePurchaseOrder function
+        });
+        
+        document.getElementById('deletePurchaseOrderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+            deletePurchaseOrder(); // Call the deletePurchaseOrder function
+        });
+        
+
+        function createVendor() {
+            var form = document.getElementById('createVendorForm');
+            fetch('/api/vendors/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'name': form.querySelector('#vendorName').value,
+                    'contact_details': form.querySelector('#contactDetails').value,
+                    'address': form.querySelector('#address').value,
+                    'vendor_code': form.querySelector('#vendorCode').value,
+                }),
+            })
+            .then(response => {
+                if (response.status == 201) {
+                    return response.json();
+                } else if(response.status === 409) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }   
+                else {
+                    throw new Error(response.status, 'Request failed');
+                }
+            })
+            .then(data => {
+                var responseDiv = document.getElementById('vendorProfileResponse');
+                responseDiv.innerHTML = 'Vendor created successfully: ' + JSON.stringify(data);
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('vendorProfileResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+        function createPurchaseOrder() {
+            var form = document.getElementById('createPurchaseOrderForm');
+            fetch('/api/purchase_orders/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'vendor': form.querySelector('#vendor').value,
+                    'po_number': form.querySelector('#poNumber').value,
+                    'issue_date': form.querySelector('#issueDate').value,
+                    'delivery_date': form.querySelector('#deliveryDate').value,
+                    'items': form.querySelector('#items').value,
+                    'quantity': form.querySelector('#quantity').value,
+                }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = 'Purchase order created successfully: ' + JSON.stringify(data);
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+        function retrieveVendorDetails() {
+            var vendorId = document.getElementById('vendorId').value;
+            fetch('/api/vendors/' + vendorId + '/',
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                var responseDiv = document.getElementById('vendorProfileResponse');
+                var responseHTML = '<h3>Vendor Details</h3>';
+                responseHTML += '<p>Vendor Code: ' + data.vendor_code + '</p>';
+                responseHTML += '<p>Name: ' + data.name + '</p>';
+                responseHTML += '<p>Contact Details: ' + data.contact_details + '</p>';
+                responseHTML += '<p>Address: ' + data.address + '</p>';
+                responseHTML += '<hr>'; // Separate each vendor with a horizontal line
+                responseDiv.innerHTML = responseHTML;
+                responseDiv.style.display = 'block';
+                })
+                .catch(error => {
+                    var responseDiv = document.getElementById('vendorProfileResponse');
+                    responseDiv.innerHTML = error.message;
+                    responseDiv.style.display = 'block';
+                });
+                
+        }
+        
+        function retrievePurchaseOrderDetails() {
+            var purchaseOrderId = document.getElementById('purchaseOrderId').value;
+            fetch('/api/purchase_orders/' + purchaseOrderId + '/',
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                console.log(data)
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = '';
+                var responseHTML = '<h3>Purchase Order Details</h3>';
+                responseHTML += '<p>PO Number: ' + data.po_number + '</p>';
+                responseHTML += '<p>Vendor: ' + data.vendor.name + '</p>';
+                responseHTML += '<p>Order Date: ' + data.order_date + '</p>';
+                responseHTML += '<p>Delivery Date: ' + data.delivery_date + '</p>';
+                responseHTML += '<p>Items: ' + data.items + '</p>';
+                responseHTML += '<p>Status: ' + data.status + '</p>';
+                responseHTML += '<p>QualityRating: ' + data.quality_rating + '</p>';
+                responseHTML += '<p>Issue Date: ' + data.issue_date + '</p>';
+                responseHTML += '<p>Acknowledgment Date: ' + data.acknowledgment_date + '</p>';
+                responseHTML += '<hr>'; // Separate each order with a horizontal line
+                responseDiv.innerHTML = responseHTML;
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+        function acknowledgePurchaseOrder() {
+            var form = document.getElementById('acknowledgePurchaseOrderForm');
+            var purchaseOrderId = form.querySelector('#ApurchaseOrderId').value;
+            fetch('/api/purchase_orders/' + purchaseOrderId + '/acknowledgment', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                console.log(data)
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = data.Detail;
+                responseDiv.style.display = 'block';
+                
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+
+        function getVendorPerformance() {
+            var vendorId = document.getElementById('vendorPerformanceId').value;
+            fetch('/api/vendors/' + vendorId + '/performance',
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                console.log(data)
+                var responseDiv = document.getElementById('performanceResponse');
+                responseDiv.innerHTML = '';
+                var responseHTML = '<h3>Vendor Performance Details</h3>';
+                responseHTML += '<p>Vendor Name: ' + data.name + '</p>';
+                responseHTML += '<p>Vendor Code: ' + data.vendor_code + '</p>';
+                responseHTML += '<p>On Time Delivery Rate: ' + data.on_time_delivery_rate + '</p>';
+                responseHTML += '<p>Quality Rating Avg: ' + data.quality_rating_avg  + '</p>';
+                responseHTML += '<p>Average Response Time: ' + data.average_response_time + '</p>';
+                responseHTML += '<p>Fulfillment Rate: ' + data.fulfillment_rate + '</p>';
+                responseHTML += '<hr>';
+                responseDiv.innerHTML = responseHTML;
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('performanceResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+         
+        function updateVendor() {
+            var form = document.getElementById('updateVendorForm');
+            var vendorId = form.querySelector('#UvendorCode').value;
+            fetch('/api/vendors/' + vendorId + '/', {
+                method: 'PUT', // or 'PATCH' if partial update is allowed
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'vendor_code': vendorId,
+                    'name': form.querySelector('#UvendorName').value,
+                    'contact_details': form.querySelector('#UcontactDetails').value,
+                    'address': form.querySelector('#Uaddress').value,
+                }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                var responseDiv = document.getElementById('vendorProfileResponse');
+                responseDiv.innerHTML = 'Vendor updated successfully: ' + JSON.stringify(data);
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('vendorProfileResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+        function deleteVendor() {
+            var form = document.getElementById('deleteVendorForm');
+            var vendorId = form.querySelector('#deleteVendorId').value;
+            fetch('/api/vendors/' + vendorId + '/', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${token}`,}
+            })
+            .then(response => {
+                if (response.status === 204) {
+                    var responseDiv = document.getElementById('vendorProfileResponse');
+                    responseDiv.innerHTML = 'Vendor deleted successfully';
+                    responseDiv.style.display = 'block';
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('vendorProfileResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+        function updatePurchaseOrder() {
+            var form = document.getElementById('updatePurchaseOrderForm');
+            var purchaseOrderId = form.querySelector('#updatePurchaseOrderId').value;
+            fetch('/api/purchase_orders/' + purchaseOrderId + '/', {
+                method: 'PUT', // or 'PATCH' if partial update is allowed
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'po_number': purchaseOrderId,
+                    'vendor': form.querySelector('#UPvendor').value,
+                    'delivery_date': form.querySelector('#UPdeliveryDate').value,
+                    'issue_date': form.querySelector('#UPissueDate').value,
+                    'items': form.querySelector('#UPitems').value,
+                    'quantity': form.querySelector('#UPquantity').value,
+                    'status': form.querySelector('#UPstatus').value
+                }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .then(data => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = 'Purchase order updated successfully: ' + JSON.stringify(data);
+                responseDiv.style.display = 'block';
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+        
+        function deletePurchaseOrder() {
+            var form = document.getElementById('deletePurchaseOrderForm');
+            var purchaseOrderId = form.querySelector('#deletePurchaseOrderId').value;
+            fetch('/api/purchase_orders/' + purchaseOrderId + '/', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Token ${token}`,}
+            })
+            .then(response => {
+                if (response.status === 204) {
+                    var responseDiv = document.getElementById('purchaseOrderResponse');
+                    responseDiv.innerHTML = 'Purchase order deleted successfully';
+                    responseDiv.style.display = 'block';
+                } else if(response.status === 404) {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.Detail);
+                    });
+                }  
+                else {
+                    throw new Error('Request failed');
+                }
+            })
+            .catch(error => {
+                var responseDiv = document.getElementById('purchaseOrderResponse');
+                responseDiv.innerHTML = error.message;
+                responseDiv.style.display = 'block';
+            });
+        }
+        
+
+        function listAllVendors() {         
+            var allFormSections = document.querySelectorAll('.form-section');
+            allFormSections.forEach(function(section) {  
+                    section.classList.remove('show');
+            });
+            var responseDiv = document.getElementById('vendorProfileResponse');
+            responseDiv.innerHTML = ''; // Clear previous content
+            fetch('/api/vendors/',
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data)
+                if(data.length == 0){
+                    responseDiv.innerHTML = 'No Vendor Records Found'
+                    responseDiv.style.display = 'block';
+                } else{                
+                var responseHTML = '<h3>Vendors List</h3>';
+                data.forEach(function(vendor) {
+                    responseHTML += '<p>Vendor Code: ' + vendor.vendor_code + '</p>';
+                    responseHTML += '<p>Name: ' + vendor.name + '</p>';
+                    responseHTML += '<p>Contact Details: ' + vendor.contact_details + '</p>';
+                    responseHTML += '<p>Address: ' + vendor.address + '</p>';
+                    responseHTML += '<hr>'; // Separate each vendor with a horizontal line
+                });
+                responseDiv.innerHTML = responseHTML;
+                responseDiv.style.display = 'block'; // Show the form section
+            }})
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Function to populate vendor options in the dropdown select
+        function populateVendorOptions(data) {
+        var vendorSelect = document.getElementById('vendorSelect');
+        vendorSelect.innerHTML = ''; // Clear previous options
+        var vendorNames = Object.keys(data); // Extract vendor names from response
+        vendorNames.forEach(function(vendorName) {
+            var option = document.createElement('option');
+            option.value = vendorName;
+            option.textContent = vendorName;
+            vendorSelect.appendChild(option);
+        });
+
+     }
+
+        function listAllPurchaseOrders() {
+            var allFormSections = document.querySelectorAll('.form-section');
+            allFormSections.forEach(function(section) {  
+                    section.classList.remove('show');
+            });
+            var responseDiv = document.getElementById('purchaseOrderResponse');
+            responseDiv.innerHTML = ''; // Clear previous content
+            fetch('/api/purchase_orders/',
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            }) 
+            .then(response => response.json())
+            .then(data => {
+            console.log(data);
+            if(Object.keys(data).length === 0){
+                responseDiv.innerHTML = 'No Purchase Records Found'
+                responseDiv.style.display = 'block';
+            }
+            else{
+            var responseblock = document.getElementById('purchaseOrderListResponse');
+            responseblock.style.display = 'block';
+            populateVendorOptions(data);
+            var vendorSelect = document.getElementById('vendorSelect');
+            vendorSelect.dispatchEvent(new Event('change'));
+            document.getElementById('vendorSelect').addEventListener('change', function() {
+                var selectedVendor = this.value;
+                if (selectedVendor) {
+                    listPurchaseOrdersByVendor(selectedVendor, data);
+                }
+            })};
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+    function listPurchaseOrdersByVendor(vendorName, purchaseOrders) {
+    var responseDiv = document.getElementById('purchaseOrderList');
+    responseDiv.innerHTML = ''; // Clear previous content
+    var orders = purchaseOrders[vendorName]; // Get purchase orders for selected vendor
+    var responseHTML = '<h3>Purchase Orders List</h3>';
+    orders.forEach(function(order) {
+        responseHTML += '<p>PO Number: ' + order.po_number + '</p>';
+        responseHTML += '<p>Vendor: ' + order.vendor + '</p>';
+        responseHTML += '<p>Order Date: ' + order.order_date + '</p>';
+        responseHTML += '<p>Delivery Date: ' + order.delivery_date + '</p>';
+        // Add more order properties as needed...
+        responseHTML += '<hr>'; // Separate each order with a horizontal line
+    });
+    responseDiv.innerHTML = responseHTML;
+    responseDiv.style.display = 'block'; // Show the response
+    
+}
+
+    </script>
+</body>
+</html>
